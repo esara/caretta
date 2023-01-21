@@ -1,0 +1,22 @@
+{{- if and ( .Capabilities.APIVersions.Has "monitoring.coreos.com/v1" ) ( .Values.podMonitor.enabled ) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+{{- if .Values.podMonitor.labels }}
+  labels:
+{{ toYaml .Values.podMonitor.labels | indent 4}}
+{{- end }}
+  name: {{ template "caretta.fullname" . }}
+{{- if .Values.podMonitor.namespace }}
+  namespace: {{ .Values.podMonitor.namespace }}
+{{- end }}
+spec:
+  jobLabel: {{ template "caretta.fullname" . }}
+  podMetricsEndpoints:
+  - port: {{ $.Values.prometheusPort }}
+    path: {{ $.Values.prometheusEndpoint }}
+    interval: {{ .interval | default $.Values.podMonitor.interval }}
+  selector:
+    matchLabels:
+      {{- include "caretta.selectorLabels" . | nindent 6 }}
+{{- end }}
